@@ -28,22 +28,20 @@ def draw_board(surface):
             c = color[(r + f) % 2]
             p.draw.rect(surface, c, p.Rect(r * SQ_SIZE, f * SQ_SIZE, WIDTH, HEIGHT))
 
-
 # Set up chess piece in board
-def draw_piece(surface):
+def draw_piece(surface, game=None):
     for r in range(DIMENSION):
         for f in range(DIMENSION):
-            board = GameState().board
-            piece = board[f][r]
+            piece = game[f][r]
             if piece != "--":
                 surface.blit(IMAGES[piece], p.Rect(r * SQ_SIZE, f * SQ_SIZE, WIDTH, HEIGHT))
 
 # Display board
-def draw_game(surface):
+def draw_game(surface, game):
+    gs = game
     load_images()
     draw_board(surface)
-    draw_piece(surface)
-
+    draw_piece(surface, gs)
 
 # "Actually" display board
 def main():
@@ -58,13 +56,10 @@ def main():
                 running = False
 
         screen.fill("white")
-
-        # Board-generating code
-        draw_game(screen)
-
+        game_state = ChessEngine.GameState()
+        draw_game(screen, game_state.board)
         p.display.flip()
         clock.tick(MAX_FPS)
-
     p.quit()
 
 
