@@ -1,23 +1,20 @@
 import pygame as p
 import tohka_admin
-WIDTH, HEIGHT = 640, 640
+WIDTH, HEIGHT = 560, 560
 DIMENSION = 8
 SQ_SIZE = HEIGHT/DIMENSION
 MAX_FPS = 15
 IMAGES = {}
 
-white_piece = ["wp", "wR", "wN", "wB", "wQ", "wK"]
-black_piece = ["bp", "bR", "bN", "bB", "bQ", "bK"]
+pieces = ["wp", "wR", "wN", "wB", "wQ", "wK", "bp", "bR", "bN", "bB", "bQ", "bK"]
+
 
 # Load images
 def load_images():
-    for piece in white_piece:
+    for piece in pieces:
         IMAGES[piece] = p.transform.scale(p.image.load("tohka_piece/" + piece + ".png"),
                                           (SQ_SIZE, SQ_SIZE))
 
-    for piece in black_piece:
-        IMAGES[piece] = p.transform.scale(p.image.load("tohka_piece/" + piece + ".png"),
-                                          (SQ_SIZE, SQ_SIZE))
 
 # Initialize chess board
 def draw_board(surface):
@@ -36,17 +33,16 @@ def draw_piece(surface, game=None):
                 surface.blit(IMAGES[piece], p.Rect(f * SQ_SIZE, r * SQ_SIZE, WIDTH, HEIGHT))
 
 # Display board
-def draw_game(surface, game):
-    gs = game
-    load_images()
+def draw_game(surface, gs):
     draw_board(surface)
-    draw_piece(surface, gs)
+    draw_piece(surface, gs.board)
 
 # "Actually" display board
 def main():
     p.init()
     screen = p.display.set_mode((WIDTH, HEIGHT))
     clock = p.time.Clock()
+    load_images()
     running = True
 
     game_state = tohka_admin.GameState()
@@ -65,25 +61,26 @@ def main():
                 mouse_pos = p.mouse.get_pos()
                 r_coor = int(mouse_pos[1] // SQ_SIZE)
                 f_coor = int(mouse_pos[0] // SQ_SIZE)
-                if (r_coor, f_coor) != selected_coor:
-                    selected_coor = (r_coor, f_coor)
-                    player_clicks.append(selected_coor)
-                else:
+                if selected_coor == (r_coor, f_coor):
                     selected_coor = ()
                     player_clicks = []
+                else:
+                    selected_coor = (r_coor, f_coor)
+                    player_clicks.append(selected_coor)
 
                 if len(player_clicks) == 2:
-                    move = tohka_admin.Move(click_lst=player_clicks, game_board=game_state.board)
+                    move = tohka_admin.Move(start_sq=player_clicks[0], end_sq=player_clicks[1],
+                                            game_board=game_state.board)
                     if move in valid_moves:
                         game_state.make_move(move)
                         moved = True
                         selected_coor = ()
                         player_clicks = []
                     else:
-                        player_clicks.pop()
+                        player_clicks = [selected_coor]
 
             elif event.type == p.KEYDOWN:
-                if event.key == p.K_z and p.key.get_mods() & p.KMOD_CTRL:
+                if event.key == p.K_z 
                     game_state.undo_move()
                     moved = True
 
@@ -92,10 +89,9 @@ def main():
             moved = False
 
         screen.fill("white")
-        draw_game(screen, game_state.board)
+        draw_game(screen, game_state)
         p.display.flip()
         clock.tick(MAX_FPS)
-    p.quit()
 
 
 if __name__ == "__main__":
